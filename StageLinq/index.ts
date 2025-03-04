@@ -2,14 +2,13 @@ import { Discovery } from '../Discovery';
 import { Logger } from '../LogEmitter';
 import { ActingAsDevice, StageLinqOptions, DeviceId } from '../types';
 import { Devices } from '../devices'
-import { Sources } from '../Sources';
 import { Service, Directory } from '../services';
 import { Status } from '../status';
 
 
 const DEFAULT_OPTIONS: StageLinqOptions = {
 	actingAs: ActingAsDevice.StageLinqJS,
-	downloadDbSources: true,
+	downloadDbSources: false,
 };
 
 /**
@@ -20,7 +19,6 @@ export class StageLinq {
 	static readonly logger: Logger = Logger.instance;
 	static readonly discovery: Discovery = new Discovery();
 	static readonly devices = new Devices();
-	static readonly sources: Sources = new Sources();
 	static readonly status: Status = new Status();
 	static directory: Directory = null;
 

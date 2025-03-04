@@ -16,16 +16,13 @@
 	"types": "dist/index.d.ts",
 	"files": ["/dist"],
 	"dependencies": {
-		"@types/filesystem": "^0.0.32",
 		"@types/uuid": "^9.0.1",
-		"better-sqlite3": "^7.6.2",
 		"console-stamp": "^3.0.3",
 		"ip": "^1.1.5",
 		"minimist": "^1.2.5"
 	},
 	"devDependencies": {
 		"@types/assert": "^1.5.5",
-		"@types/better-sqlite3": "^7.6.3",
 		"@types/ip": "^1.1.0",
 		"@types/node": "^18.15.11",
 		"prettier": "^2.5.1",

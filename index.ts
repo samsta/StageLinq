@@ -4,4 +4,3 @@ export * from './StageLinq';
 export * from './types';
 export * from './utils';
 export * from './devices';
-export * from './Sources';

@@ -1,72 +1,21 @@
 import { ActingAsDevice, StageLinqOptions, Services, DeviceId } from '../types';
-import { StateData, StateMap, BeatData, BeatInfo, FileTransfer, Broadcast } from '../services';
-import { Source } from '../Sources'
+import { StateData, StateMap, BeatData, BeatInfo, Broadcast } from '../services';
 import { sleep } from '../utils/sleep';
 import { StageLinq } from '../StageLinq';
 import { Logger } from '../LogEmitter';
-import * as fs from 'fs';
-import * as os from 'os';
-import * as Path from 'path';
 
 require('console-stamp')(console, {
 	format: ':date(HH:MM:ss) :label',
 });
-
-function progressBar(size: number, bytes: number, total: number): string {
-	const progress = Math.ceil((bytes / total) * 10)
-	let progressArrary = new Array<string>(size);
-	progressArrary.fill(' ');
-	if (progress) {
-		for (let i = 0; i < progress; i++) {
-			progressArrary[i] = '|'
-		}
-	}
-	return `[${progressArrary.join('')}]`
-}
-
-// async function getTrackInfo(sourceName: string, deviceId: DeviceId, trackName: string) {
-//   while (!StageLinq.sources.hasSourceAndDB(sourceName, deviceId)) {
-//     await sleep(1000);
-//   }
-//   try {
-//     const source = StageLinq.sources.getSource(sourceName, deviceId);
-//     const connection = source.getDatabase().connection;
-//     const result = await connection.getTrackInfo(trackName);
-//     connection.close();
-//     return result;
-//   } catch (e) {
-//     console.error(e);
-//   }
-// }
-
-async function downloadFile(sourceName: string, deviceId: DeviceId, path: string, dest?: string) {
-	while (!StageLinq.sources.hasSource(sourceName, deviceId)) {
-		await sleep(250)
-	}
-	try {
-		const source = StageLinq.sources.getSource(sourceName, deviceId);
-		const data = await StageLinq.sources.downloadFile(source, path);
-		if (dest && data) {
-			const filePath = `${dest}/${path.split('/').pop()}`
-			fs.writeFileSync(filePath, Buffer.from(data));
-		}
-	} catch (e) {
-		console.error(`Could not download ${path}`);
-		console.error(e)
-	}
-}
-
 
 async function main() {
 
 	console.log('Starting CLI');
 
 	const stageLinqOptions: StageLinqOptions = {
-		downloadDbSources: true,
 		actingAs: ActingAsDevice.StageLinqJS,
 		services: [
 			Services.StateMap,
-			Services.FileTransfer,
 			Services.BeatInfo,
 			Services.Broadcast,
 		],
@@ -129,13 +78,6 @@ async function main() {
 
 		Broadcast.emitter.on('message', async (deviceId: DeviceId, name: string, value) => {
 			console.log(`[BROADCAST] ${deviceId.string} ${name}`, value);
-			const db = StageLinq.sources.getDBByUuid(value.databaseUuid);
-			if (db.length) {
-				const connection = db[0].connection();
-				const track = await connection.getTrackById(value.trackId);
-				connection.close();
-				console.log('[BROADCAST] Track Changed:', track);
-			}
 		})
 
 	}
@@ -149,9 +91,6 @@ async function main() {
 				await sleep(250);
 				const track = StageLinq.status.getTrack(data.deviceId, deck);
 				console.log(`Now Playing: `, track);
-				if (stageLinqOptions.services.includes(Services.FileTransfer) && StageLinq.options.downloadDbSources) {
-					downloadFile(track.source.name, track.source.location, track.source.path, Path.resolve(os.tmpdir()));
-				}
 			}
 		}
 
@@ -171,33 +110,6 @@ async function main() {
 		});
 
 	}
-
-
-	if (stageLinqOptions.services.includes(Services.FileTransfer)) {
-
-
-		FileTransfer.emitter.on('fileTransferProgress', (source, file, txid, progress) => {
-			Logger.debug(`[FILETRANSFER] ${source.name} id:{${txid}} Reading ${file}: ${progressBar(10, progress.bytesDownloaded, progress.total)} (${Math.ceil(progress.percentComplete)}%)`);
-		});
-
-		FileTransfer.emitter.on('fileTransferComplete', (source, file, txid) => {
-			console.log(`[FILETRANSFER] Complete ${source.name} id:{${txid}} ${file}`);
-		});
-
-		StageLinq.sources.on('newSource', (source: Source) => {
-			console.log(`[SOURCES] Source Available: (${source.name})`);
-		});
-
-		StageLinq.sources.on('dbDownloaded', (source: Source) => {
-			console.log(`[SOURCES] Database Downloaded: (${source.name})`);
-		});
-
-		StageLinq.sources.on('sourceRemoved', (sourceName: string, deviceId: DeviceId) => {
-			console.log(`[SOURCES] Source Removed: ${sourceName} on ${deviceId.string}`);
-		});
-
-	}
-
 
 	if (stageLinqOptions.services.includes(Services.BeatInfo)) {
 

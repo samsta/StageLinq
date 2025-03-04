@@ -7,7 +7,6 @@ import { StageLinq } from '../StageLinq';
 import {
 	Service,
 	StateMap,
-	FileTransfer,
 	BeatInfo,
 	TimeSynchronization,
 	Broadcast,
@@ -109,9 +108,7 @@ export class Directory extends Service<DirectoryData> {
 	/////////// Private Methods
 
 	private async getNewService(serviceName: string, deviceId: DeviceId): Promise<InstanceType<typeof Service>> {
-		if (serviceName == "FileTransfer") return await StageLinq.startServiceListener(FileTransfer, deviceId)
 		if (serviceName == "StateMap") return await StageLinq.startServiceListener(StateMap, deviceId)
-		if (serviceName == "FileTransfer") return await StageLinq.startServiceListener(FileTransfer, deviceId)
 		if (serviceName == "BeatInfo") return await StageLinq.startServiceListener(BeatInfo, deviceId)
 		if (serviceName == "Broadcast") return await StageLinq.startServiceListener(Broadcast, deviceId)
 		if (serviceName == "TimeSynchronization") return await StageLinq.startServiceListener(TimeSynchronization, deviceId)
