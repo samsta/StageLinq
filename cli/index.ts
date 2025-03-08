@@ -9,6 +9,17 @@ require('console-stamp')(console, {
 	format: ':date(HH:MM:ss) :label',
 });
 
+function convertHexStringToRgba(str: string): { r: number, g: number, b: number, a: number } {
+	const hex = str.replace('#', '');
+	// it seems as though the stagelinq color string is ARGB, not RGBA
+	return {
+		r: parseInt(hex.substring(2, 4), 16),
+		g: parseInt(hex.substring(4, 6), 16),
+		b: parseInt(hex.substring(6, 8), 16),
+		a: hex.length === 8 ? parseInt(hex.substring(0, 2), 16) / 255 : 1
+	};
+}
+
 async function main() {
 
 	console.log('Starting CLI');
@@ -117,17 +128,22 @@ async function main() {
 
 		StateMap.emitter.on('stateMessage', async (data: StateData) => {
 			Logger.info(`[STATEMAP] ${data.deviceId.string} ${data.name} => ${JSON.stringify(data.json)}`);
-			var argstr = '';
-			if (data.name.endsWith('SongName')) {
-				argstr = data.json.string;
-			} else if (data.name.endsWith('ArtistName')) {
-				argstr = data.json.string;
+			var args: any[] = [];
+
+			if ("string" in data.json) {
+				args = [{ type: 's', value: data.json.string }];
+			} else if ("state" in data.json) {
+				args = [{ type: data.json.state ? "T" : "F", value: 0 }];
+			} else if ("value" in data.json) {
+				args = [{ type: 'f', value: data.json.value }];
+			} else if ("color" in data.json && typeof data.json.color === 'string') {
+				args = [{ type: 'r', value: convertHexStringToRgba(data.json.color) }];
 			}
 
-			if (argstr) {
+			if (args.length > 0) {
 				udp.send({
 					address: `${data.name}`,
-					args: [ argstr ]
+					args: args
 				});
 			}
 		});
