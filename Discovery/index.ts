@@ -71,7 +71,15 @@ export class Discovery extends EventEmitter {
 		assert(this.socket);
 		this.socket.setBroadcast(true);
 		const discoveryMessage = this.createDiscoveryMessage(Action.Login, this.options, port);
-		await sleep(500);
+
+		Logger.info("Waiting for device to show up on network...");
+		var retry_count = 0;
+		while (!this.address) {
+			if (++retry_count % 10 == 0) {
+				Logger.info("   still waiting...");
+			}
+			await sleep(500);
+		}
 		const ips = this.findBroadcastIPs();
 		const address = ips.filter((ip) => {
 			return ip.contains(this.address) === true;
