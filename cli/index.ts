@@ -4,6 +4,7 @@ import { sleep } from '../utils/sleep';
 import { StageLinq } from '../StageLinq';
 import { Logger } from '../LogEmitter';
 
+
 require('console-stamp')(console, {
 	format: ':date(HH:MM:ss) :label',
 });
@@ -11,6 +12,15 @@ require('console-stamp')(console, {
 async function main() {
 
 	console.log('Starting CLI');
+
+	const osc = require('osc');
+	const udp = new osc.UDPPort({
+		localAddress: "127.0.0.1",
+		localPort: 57121,
+		remoteAddress: "127.0.0.1",
+		remotePort: 57200
+	});
+	udp.open();
 
 	const stageLinqOptions: StageLinqOptions = {
 		actingAs: ActingAsDevice.StageLinqJS,
@@ -107,6 +117,19 @@ async function main() {
 
 		StateMap.emitter.on('stateMessage', async (data: StateData) => {
 			Logger.info(`[STATEMAP] ${data.deviceId.string} ${data.name} => ${JSON.stringify(data.json)}`);
+			var argstr = '';
+			if (data.name.endsWith('SongName')) {
+				argstr = data.json.string;
+			} else if (data.name.endsWith('ArtistName')) {
+				argstr = data.json.string;
+			}
+
+			if (argstr) {
+				udp.send({
+					address: `${data.name}`,
+					args: [ argstr ]
+				});
+			}
 		});
 
 	}
@@ -133,6 +156,14 @@ async function main() {
 			let deckBeatString = ""
 			for (let i = 0; i < bd.deckCount; i++) {
 				deckBeatString += `Deck: ${i + 1} Beat: ${bd.deck[i].beat.toFixed(3)}/${bd.deck[i].totalBeats.toFixed(0)} `
+
+				// only send OS if we have a valid beat
+				if (bd.deck[i].totalBeats > 0) {
+					udp.send({
+						address: `/Engine/Deck${i + 1}/Beat`,
+						args: [ bd.deck[i].beat ]
+					});
+				}
 			}
 			console.log(`[BEATINFO] ${bd.deviceId.string} clock: ${bd.clock} ${deckBeatString}`);
 		}

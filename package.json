@@ -10,16 +10,22 @@
 		"watch": "tsc --build tsconfig.json -w",
 		"prepublish": "tsc --build tsconfig.json"
 	},
+	"bin": {
+		"stagelinq-cli": "dist/cli/index.js"
+	},
 	"author": "honusz",
 	"license": "GNU GPLv3",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
-	"files": ["/dist"],
+	"files": [
+		"/dist"
+	],
 	"dependencies": {
 		"@types/uuid": "^9.0.1",
 		"console-stamp": "^3.0.3",
 		"ip": "^1.1.5",
-		"minimist": "^1.2.5"
+		"minimist": "^1.2.5",
+		"osc": "^2.4.5"
 	},
 	"devDependencies": {
 		"@types/assert": "^1.5.5",
